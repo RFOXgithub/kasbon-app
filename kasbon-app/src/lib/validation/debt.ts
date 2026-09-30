@@ -52,16 +52,19 @@ const debtFieldsSchema = z.object({
     .number({
       error: "Jumlah harus berupa angka.",
     })
-    .int("Jumlah harus berupa Rupiah utuh tanpa desimal.")
+    .refine(Number.isSafeInteger, "Jumlah harus berupa Rupiah utuh tanpa desimal.")
     .positive("Jumlah harus lebih dari 0.")
     .max(Number.MAX_SAFE_INTEGER, "Jumlah melebihi batas angka yang didukung."),
 
-  note: nullableNoteSchema.optional().default(null),
+  note: nullableNoteSchema.optional(),
 
-  due_date: nullableDateSchema.optional().default(null),
+  due_date: nullableDateSchema.optional(),
 });
 
-export const createDebtSchema = debtFieldsSchema;
+export const createDebtSchema = debtFieldsSchema.extend({
+  note: nullableNoteSchema.optional().default(null),
+  due_date: nullableDateSchema.optional().default(null),
+});
 
 export const updateDebtSchema = debtFieldsSchema
   .partial()
