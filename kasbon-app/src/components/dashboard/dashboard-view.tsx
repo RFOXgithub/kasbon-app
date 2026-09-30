@@ -5,7 +5,7 @@ import { SummarySection } from "./summary-section";
 
 export function DashboardView() {
   return (
-    <main className="min-h-[100dvh] bg-[#eeeae1] px-4 py-6 text-[#172820] sm:px-8 md:py-8">
+    <main className="min-h-[100dvh] bg-page px-4 py-6 text-ink sm:px-8 md:py-8">
       <div className="mx-auto max-w-7xl">
         <DashboardHeader />
 

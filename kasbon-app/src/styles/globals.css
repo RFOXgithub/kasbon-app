@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+:root {
+  --background: #eeeae1;
+  --foreground: #172820;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-page: var(--background);
+  --color-ink: var(--foreground);
+  --color-canvas: #faf9f5;
+  --color-surface: #fffefa;
+  --color-forest: #193d30;
+  --color-brand-cream: #e7e7cb;
+  --color-hero-text: #f7f5ed;
+  --color-action: #1e5b41;
+  --color-action-hover: #174b35;
+  --color-accent: #315b42;
+  --color-focus: #387650;
+  --color-soft-accent: #84aa8c;
+  --color-underline: #91ad93;
+  --color-muted: #66776c;
+  --color-placeholder: #87948a;
+  --color-light-muted: #c5d5c8;
+  --color-frame: #dfe4da;
+  --color-field-frame: #e9ebe3;
+  --color-tint: #e9f0e7;
+  --color-tint-strong: #dce9db;
+  --color-warm: #eee6d5;
+  --color-warm-ink: #745c3d;
+  --color-gold: #d7ba90;
+  --color-error-surface: #f9e9e4;
+  --color-error-ink: #8e382e;
+  --color-success-surface: #e8f1e8;
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), sans-serif;
+}
+
+@layer components {
+  .auth-label {
+    @apply mb-2.5 block text-sm font-medium text-forest;
+  }
+
+  .auth-field-shell {
+    @apply rounded-2xl bg-field-frame p-1 ring-1 ring-forest/10 transition-shadow duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] focus-within:ring-2 focus-within:ring-focus/60;
+  }
+
+  .auth-input {
+    @apply min-h-12 w-full rounded-xl bg-surface px-4 text-base text-ink outline-none placeholder:text-placeholder;
+  }
+
+  .auth-toggle {
+    @apply min-h-11 shrink-0 rounded-lg px-4 text-xs font-semibold text-accent transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:text-forest focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-action;
+  }
+
+  .auth-submit {
+    @apply flex min-h-14 w-full cursor-pointer items-center justify-between rounded-full bg-action py-2 pl-6 pr-2 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(30,91,65,0.14)] transition-[background-color,transform,box-shadow] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-action-hover active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none;
+  }
+
+  .auth-submit-icon {
+    @apply grid size-10 place-items-center rounded-full bg-white/15 text-lg font-normal transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 motion-reduce:transition-none;
+  }
+
+  .surface-shell {
+    @apply rounded-4xl bg-frame p-1.5 ring-1 ring-forest/10;
+  }
+
+  .surface-core {
+    @apply rounded-3xl bg-surface shadow-[inset_0_1px_0_rgba(255,255,255,0.9)];
+  }
+}
+
+.page-enter {
+  animation: page-enter 850ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+.page-enter-late {
+  animation-delay: 120ms;
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter {
+    animation: none;
+  }
+}

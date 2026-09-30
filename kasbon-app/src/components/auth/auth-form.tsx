@@ -2,7 +2,7 @@
 
 import { LoginView } from "./login-view";
 import { SignupView } from "./signup-view";
-import { useAuthForm, type AuthMode } from "./use-auth-form";
+import { useAuthForm, type AuthMode } from "@/hooks/auth/use-auth-form";
 
 export function AuthForm({ mode }: { mode: AuthMode }) {
   const form = useAuthForm(mode);
