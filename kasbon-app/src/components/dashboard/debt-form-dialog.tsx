@@ -3,11 +3,13 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { X } from "lucide-react";
 
+import { formatRupiah } from "@/lib/currency";
 import { createDebtSchema } from "@/lib/validation/debt";
 import type { Debt, DebtInput, DebtType } from "@/types/debt";
 
 type DebtFormDialogProps = {
   debt: Debt | null;
+  customerNames: string[];
   requestError: string | null;
   onClose: () => void;
   onSave: (input: DebtInput, existing?: Debt) => Promise<boolean>;
@@ -18,7 +20,7 @@ function today() {
   return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, "0"), String(date.getDate()).padStart(2, "0")].join("-");
 }
 
-export function DebtFormDialog({ debt, requestError, onClose, onSave }: DebtFormDialogProps) {
+export function DebtFormDialog({ debt, customerNames, requestError, onClose, onSave }: DebtFormDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [type, setType] = useState<DebtType>(debt?.type ?? "owed_to_me");
   const [name, setName] = useState(debt?.counterpart_name ?? "");
@@ -90,27 +92,29 @@ export function DebtFormDialog({ debt, requestError, onClose, onSave }: DebtForm
 
         <form className="mt-7 space-y-5" noValidate onSubmit={handleSubmit} aria-busy={isSaving}>
           <fieldset>
-            <legend className="text-sm font-medium">Tipe catatan</legend>
+            <legend className="text-sm font-medium">Arah uang</legend>
             <div className="mt-2 grid grid-cols-2 gap-3">
               {([
-                ["owed_to_me", "Saya dihutang"],
-                ["i_owe", "Saya hutang"],
-              ] as const).map(([value, label]) => (
-                <label key={value} className={`flex min-h-12 cursor-pointer items-center gap-2 rounded-xl border px-3 text-sm ${type === value ? "border-action bg-tint text-accent" : "border-forest/15"}`}>
+                ["owed_to_me", "Berikan", "Uang keluar · Utang pelanggan"],
+                ["i_owe", "Terima", "Uang masuk · Utang saya"],
+              ] as const).map(([value, label, description]) => (
+                <label key={value} className={`flex min-h-16 cursor-pointer items-center gap-2 rounded-xl border px-3 text-sm ${type === value ? value === "i_owe" ? "border-action bg-tint text-accent" : "border-error-ink bg-error-surface text-error-ink" : "border-forest/15"}`}>
                   <input checked={type === value} name="type" onChange={() => setType(value)} type="radio" value={value} />
-                  {label}
+                  <span><span className="block font-semibold">{label}</span><span className="block text-xs">{description}</span></span>
                 </label>
               ))}
             </div>
           </fieldset>
 
           <label className="block text-sm font-medium">
-            Nama orang
-            <input autoComplete="name" className={fieldClass} maxLength={100} onChange={(event) => setName(event.target.value)} required type="text" value={name} />
+            Nama pelanggan
+            <input autoComplete="off" className={fieldClass} list="customer-names" maxLength={100} onChange={(event) => setName(event.target.value)} placeholder="Pilih atau ketik nama baru" required type="text" value={name} />
+            <span className="mt-1 block text-xs font-normal text-muted">Nama baru akan tersedia untuk catatan berikutnya.</span>
           </label>
+          <datalist id="customer-names">{customerNames.map((customerName) => <option key={customerName} value={customerName} />)}</datalist>
           <label className="block text-sm font-medium">
-            Jumlah (Rp)
-            <input className={fieldClass} inputMode="numeric" min="1" onChange={(event) => setAmount(event.target.value)} required step="1" type="number" value={amount} />
+            Nominal
+            <input className={`${fieldClass} ${type === "i_owe" ? "text-accent" : "text-error-ink"}`} inputMode="numeric" onChange={(event) => setAmount(event.target.value.replace(/\D/g, ""))} placeholder="Rp " required type="text" value={amount ? formatRupiah(Number(amount)).replace(/\s/g, " ") : "Rp "} />
           </label>
           <label className="block text-sm font-medium">
             Tanggal jatuh tempo

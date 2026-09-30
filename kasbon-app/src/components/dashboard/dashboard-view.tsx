@@ -8,6 +8,7 @@ import type { Debt } from "@/types/debt";
 import { DashboardHeader } from "./dashboard-header";
 import { DashboardHero } from "./dashboard-hero";
 import { DebtFormDialog } from "./debt-form-dialog";
+import { DeleteDebtDialog } from "./delete-debt-dialog";
 import { EntriesSection } from "./entries-section";
 import { SummarySection } from "./summary-section";
 
@@ -18,6 +19,7 @@ export function DashboardView() {
   } = useDebts();
   const [formOpen, setFormOpen] = useState(false);
   const [editingDebt, setEditingDebt] = useState<Debt | null>(null);
+  const [deletingDebt, setDeletingDebt] = useState<Debt | null>(null);
 
   function openForm(debt: Debt | null) {
     clearActionError();
@@ -26,9 +28,8 @@ export function DashboardView() {
   }
 
   function confirmDelete(debt: Debt) {
-    if (window.confirm(`Hapus catatan ${debt.counterpart_name}? Tindakan ini tidak bisa dibatalkan.`)) {
-      void deleteDebt(debt);
-    }
+    clearActionError();
+    setDeletingDebt(debt);
   }
 
   return (
@@ -57,9 +58,18 @@ export function DashboardView() {
         <DebtFormDialog
           key={editingDebt?.id ?? "new"}
           debt={editingDebt}
+          customerNames={[...new Set(debts.map((item) => item.counterpart_name.trim()).filter(Boolean))]}
           requestError={actionError}
           onClose={() => setFormOpen(false)}
           onSave={saveDebt}
+        />
+      )}
+      {deletingDebt && (
+        <DeleteDebtDialog
+          debt={deletingDebt}
+          requestError={actionError}
+          onClose={() => setDeletingDebt(null)}
+          onDelete={deleteDebt}
         />
       )}
     </main>

@@ -26,7 +26,7 @@ export function LoginView({
               className="grid size-10 place-items-center rounded-xl bg-brand-cream text-xl font-semibold tracking-[-0.12em] text-forest shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]"
               aria-hidden="true"
             >
-              K<span className="text-soft-accent">.</span>
+              <span className="flex items-baseline leading-none">K<span className="text-soft-accent">.</span></span>
             </span>
             <span className="text-lg font-semibold tracking-[-0.04em]">
               kasbon

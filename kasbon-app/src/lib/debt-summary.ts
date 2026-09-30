@@ -24,7 +24,7 @@ export function calculateDebtSummary(debts: Debt[]): DebtSummary {
       }
 
       summary.unsettledCount += 1;
-      summary.net = summary.owedToMe - summary.iOwe;
+      summary.net = summary.iOwe - summary.owedToMe;
 
       return summary;
     },

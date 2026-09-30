@@ -44,12 +44,13 @@ export function EntriesSection({
   }), [debts, search, status, type, sort]);
 
   const groups = useMemo(() => {
-    const grouped = new Map<string, { name: string; count: number; total: number }>();
+    const grouped = new Map<string, { name: string; count: number; received: number; given: number }>();
     for (const debt of visibleDebts) {
       const key = debt.counterpart_name.trim().toLocaleLowerCase("id-ID");
-      const group = grouped.get(key) ?? { name: debt.counterpart_name, count: 0, total: 0 };
+      const group = grouped.get(key) ?? { name: debt.counterpart_name, count: 0, received: 0, given: 0 };
       group.count += 1;
-      group.total += debt.amount;
+      if (debt.type === "i_owe") group.received += debt.amount;
+      else group.given += debt.amount;
       grouped.set(key, group);
     }
     return [...grouped.values()].filter((group) => group.count > 1);
@@ -103,14 +104,28 @@ export function EntriesSection({
         <>
           <p className="mb-4 text-sm text-muted">Menampilkan {visibleDebts.length} dari {debts.length} catatan</p>
           {groups.length > 0 && (
-            <div className="mb-5 rounded-2xl bg-tint p-4" aria-label="Ringkasan per orang">
-              <h3 className="text-sm font-semibold text-accent">Catatan dari orang yang sama</h3>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {groups.map((group) => <span key={group.name.toLocaleLowerCase("id-ID")} className="rounded-full bg-surface px-3 py-2 text-xs text-ink">
-                  {group.name}: {group.count} catatan · {formatRupiah(group.total)}
-                </span>)}
+            <section className="surface-shell mb-5" aria-labelledby="group-summary-heading">
+              <div className="surface-core p-5 sm:p-6">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h3 id="group-summary-heading" className="text-base font-semibold tracking-tight text-ink">Catatan dari orang yang sama</h3>
+                  <span className="text-sm text-muted">{groups.length} orang</span>
+                </div>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  {groups.map((group) => (
+                    <article key={group.name.toLocaleLowerCase("id-ID")} className="min-w-0 rounded-2xl bg-canvas p-4">
+                      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                        <h4 className="min-w-0 break-words text-base font-semibold text-ink">{group.name}</h4>
+                        <span className="text-xs text-muted">{group.count} catatan</span>
+                      </div>
+                      <div className="mt-3 space-y-2 text-sm">
+                        {group.received > 0 && <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-accent"><span>Terima</span><span className="font-semibold tabular-nums">{formatRupiah(group.received)}</span></div>}
+                        {group.given > 0 && <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-error-ink"><span>Berikan</span><span className="font-semibold tabular-nums">{formatRupiah(group.given)}</span></div>}
+                      </div>
+                    </article>
+                  ))}
+                </div>
               </div>
-            </div>
+            </section>
           )}
           <div className="grid gap-4">
             {visibleDebts.map((debt) => <DebtItem key={debt.id} debt={debt} isSettling={pendingAction === `settle:${debt.id}`} isDeleting={pendingAction === `delete:${debt.id}`} isDisabled={pendingAction !== null} onSettle={onSettle} onEdit={onEdit} onDelete={onDelete} />)}

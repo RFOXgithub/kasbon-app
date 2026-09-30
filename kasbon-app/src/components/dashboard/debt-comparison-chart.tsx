@@ -8,8 +8,8 @@ type DebtComparisonChartProps = {
 export function DebtComparisonChart({ owedToMe, iOwe }: DebtComparisonChartProps) {
   const maximum = Math.max(owedToMe, iOwe, 1);
   const bars = [
-    { label: "Saya dihutang", value: owedToMe, color: "bg-action" },
-    { label: "Saya hutang", value: iOwe, color: "bg-gold" },
+    { label: "Total Utang Saya · uang masuk", value: iOwe, color: "bg-action" },
+    { label: "Total Utang Pelanggan · uang keluar", value: owedToMe, color: "bg-error-ink" },
   ];
 
   return (

@@ -117,8 +117,8 @@ export function useDebts() {
     }
   }
 
-  async function deleteDebt(debt: Debt): Promise<void> {
-    if (!beginMutation(`delete:${debt.id}`)) return;
+  async function deleteDebt(debt: Debt): Promise<boolean> {
+    if (!beginMutation(`delete:${debt.id}`)) return false;
     try {
       const response = await fetch(`/api/debts/${encodeURIComponent(debt.id)}`, {
         method: "DELETE",
@@ -126,8 +126,10 @@ export function useDebts() {
       });
       if (!response.ok) throw await responseError(response, "Catatan gagal dihapus.");
       setDebts((current) => current.filter((item) => item.id !== debt.id));
+      return true;
     } catch (error) {
       setActionError(error instanceof Error ? error.message : "Catatan gagal dihapus.");
+      return false;
     } finally {
       endMutation();
     }

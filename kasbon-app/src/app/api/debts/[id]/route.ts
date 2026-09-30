@@ -58,6 +58,75 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   const input = bodyValidation.data;
 
+  if (input.settled === undefined) {
+    const updates = { ...input };
+    delete updates.settled;
+
+    const { data, error } = await supabase
+      .from("debts")
+      .update(updates)
+      .eq("id", idValidation.data)
+      .eq("user_id", userId)
+      .select(debtColumns)
+      .maybeSingle();
+
+    if (error) {
+      console.error("PATCH /api/debts/[id] gagal:", error);
+      return errorResponse(
+        error.code === "23514"
+          ? "Data tidak memenuhi aturan penyimpanan."
+          : "Data kasbon gagal diperbarui.",
+        error.code === "23514" ? 400 : 500,
+      );
+    }
+
+    if (!data) return errorResponse("Data kasbon tidak ditemukan.", 404);
+
+    return Response.json(
+      { message: "Data kasbon berhasil diperbarui.", data },
+      { status: 200 },
+    );
+  }
+
+  if (input.settled === true && Object.keys(input).length === 1) {
+    const { data, error } = await supabase
+      .from("debts")
+      .update({ settled_at: new Date().toISOString() })
+      .eq("id", idValidation.data)
+      .eq("user_id", userId)
+      .is("settled_at", null)
+      .select(debtColumns)
+      .maybeSingle();
+
+    if (error) {
+      console.error("PATCH /api/debts/[id] gagal:", error);
+      return errorResponse("Data kasbon gagal diperbarui.", 500);
+    }
+
+    if (data) {
+      return Response.json(
+        { message: "Data kasbon berhasil diperbarui.", data },
+        { status: 200 },
+      );
+    }
+
+    const { data: latestDebt, error: latestError } = await supabase
+      .from("debts")
+      .select(debtColumns)
+      .eq("id", idValidation.data)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (latestError) return errorResponse("Data kasbon tidak dapat diperiksa.", 500);
+    if (!latestDebt) return errorResponse("Data kasbon tidak ditemukan.", 404);
+    if (!latestDebt.settled_at) return errorResponse("Data kasbon gagal diperbarui.", 409);
+
+    return Response.json(
+      { message: "Data kasbon sudah lunas.", data: latestDebt },
+      { status: 200 },
+    );
+  }
+
   const { data: existingDebt, error: findError } = await supabase
     .from("debts")
     .select(debtColumns)
@@ -115,22 +184,13 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
   }
 
-  const settlementOnly =
-    input.settled === true &&
-    updates.settled_at !== undefined &&
-    Object.keys(updates).length === 1;
-
-  let updateQuery = supabase
+  const { data, error } = await supabase
     .from("debts")
     .update(updates)
     .eq("id", idValidation.data)
-    .eq("user_id", userId);
-
-  if (settlementOnly) {
-    updateQuery = updateQuery.is("settled_at", null);
-  }
-
-  const { data, error } = await updateQuery.select(debtColumns).maybeSingle();
+    .eq("user_id", userId)
+    .select(debtColumns)
+    .maybeSingle();
 
   if (error) {
     console.error("PATCH /api/debts/[id] gagal:", error);
@@ -143,26 +203,6 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   if (!data) {
-    if (settlementOnly) {
-      const { data: latestDebt, error: latestError } = await supabase
-        .from("debts")
-        .select(debtColumns)
-        .eq("id", idValidation.data)
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (latestError) {
-        return errorResponse("Data kasbon tidak dapat diperiksa.", 500);
-      }
-
-      if (latestDebt?.settled_at) {
-        return Response.json(
-          { message: "Data kasbon sudah lunas.", data: latestDebt },
-          { status: 200 },
-        );
-      }
-    }
-
     return errorResponse("Data kasbon tidak ditemukan.", 404);
   }
 

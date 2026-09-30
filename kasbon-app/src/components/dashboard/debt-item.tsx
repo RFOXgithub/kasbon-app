@@ -23,8 +23,8 @@ export function DebtItem({ debt, isSettling, isDeleting, isDisabled, onSettle, o
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-lg font-medium tracking-tight text-ink">{debt.counterpart_name}</h3>
-            <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${debt.type === "owed_to_me" ? "bg-tint text-accent" : "bg-warm text-warm-ink"}`}>
-              {debt.type === "owed_to_me" ? "Saya dihutang" : "Saya hutang"}
+            <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${debt.type === "i_owe" ? "bg-tint text-accent" : "bg-error-surface text-error-ink"}`}>
+              {debt.type === "i_owe" ? "Terima · Utang saya" : "Berikan · Utang pelanggan"}
             </span>
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
@@ -35,7 +35,7 @@ export function DebtItem({ debt, isSettling, isDeleting, isDisabled, onSettle, o
           {debt.note && <p className="mt-2 text-sm text-muted">{debt.note}</p>}
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-4 sm:justify-end">
-          <p className="text-xl font-semibold tracking-tight text-ink">{formatRupiah(debt.amount)}</p>
+          <p className={`text-xl font-semibold tracking-tight ${debt.type === "i_owe" ? "text-accent" : "text-error-ink"}`}>{formatRupiah(debt.amount)}</p>
           {isSettled ? (
             <span className="inline-flex min-h-11 items-center gap-2 rounded-full bg-tint px-4 text-sm font-medium text-accent"><Check aria-hidden="true" size={16} /> Lunas</span>
           ) : (

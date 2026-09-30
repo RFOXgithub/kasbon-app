@@ -16,9 +16,9 @@ export function SummarySection({ debts, isLoading, hasError }: SummarySectionPro
   const summary = calculateDebtSummary(debts);
   const unavailable = isLoading || hasError;
   const cards = [
-    { label: "Total saya dihutang", value: summary.owedToMe, Icon: ArrowDownLeft, accent: "bg-tint text-accent" },
-    { label: "Total saya hutang", value: summary.iOwe, Icon: ArrowUpRight, accent: "bg-warm text-warm-ink" },
-    { label: "Net", value: summary.net, Icon: Scale, accent: "bg-frame text-accent" },
+    { label: "Total Utang Saya", value: summary.iOwe, Icon: ArrowDownLeft, accent: "bg-tint text-accent", amountColor: "text-accent" },
+    { label: "Total Utang Pelanggan", value: summary.owedToMe, Icon: ArrowUpRight, accent: "bg-error-surface text-error-ink", amountColor: "text-error-ink" },
+    { label: "Selisih uang masuk - keluar", value: summary.net, Icon: Scale, accent: "bg-frame text-accent", amountColor: summary.net > 0 ? "text-accent" : summary.net < 0 ? "text-error-ink" : "text-ink" },
   ];
 
   return (
@@ -28,7 +28,7 @@ export function SummarySection({ debts, isLoading, hasError }: SummarySectionPro
         <h2 id="summary-heading" className="mt-2 text-2xl font-medium tracking-[-0.05em] sm:text-3xl">Ringkasan keuangan</h2>
       </div>
       <div className="grid gap-4 md:grid-cols-3" aria-busy={isLoading}>
-        {cards.map(({ label, value, Icon, accent }) => (
+        {cards.map(({ label, value, Icon, accent, amountColor }) => (
           <article key={label} className="surface-shell page-enter rounded-3xl">
             <div className="surface-core flex min-h-48 flex-col rounded-2xl p-6">
               <div className={`grid size-11 place-items-center rounded-2xl ${accent}`}>
@@ -38,7 +38,7 @@ export function SummarySection({ debts, isLoading, hasError }: SummarySectionPro
               {isLoading ? (
                 <span className="loading-skeleton mt-auto block h-10 w-2/3 rounded-xl" aria-hidden="true" />
               ) : (
-                <p className={`mt-auto pt-2 text-3xl font-medium tracking-[-0.07em] sm:text-4xl ${label === "Net" ? (value > 0 ? "text-accent" : value < 0 ? "text-error-ink" : "text-ink") : "text-ink"}`}>
+                <p className={`mt-auto pt-2 text-3xl font-medium tracking-[-0.07em] sm:text-4xl ${amountColor}`}>
                   {hasError ? "—" : formatRupiah(value)}
                 </p>
               )}
