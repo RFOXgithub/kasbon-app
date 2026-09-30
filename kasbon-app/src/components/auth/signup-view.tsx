@@ -41,7 +41,7 @@ export function SignupView({
               <h2 id="signup-heading" className="mt-5 text-3xl lg:text-4xl font-medium leading-tight tracking-[-0.06em]">Daftar Kasbon</h2>
               <p className="mt-2 text-sm leading-6 text-muted">Cukup email dan kata sandi untuk memulai.</p>
 
-              <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
+              <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate aria-busy={isSubmitting}>
                 <div>
                   <label className="auth-label" htmlFor="email">Alamat email</label>
                   <div className="auth-field-shell">
@@ -60,7 +60,7 @@ export function SignupView({
                 </div>
                 {errorMessage ? <p aria-live="polite" className="rounded-2xl bg-error-surface px-4 py-3 text-sm text-error-ink" role="alert">{errorMessage}</p> : null}
                 {successMessage ? <p aria-live="polite" className="rounded-2xl bg-success-surface px-4 py-3 text-sm text-accent" role="status">{successMessage}</p> : null}
-                <button className="auth-submit group" disabled={isSubmitting} type="submit"><span>{isSubmitting ? "Sedang mendaftar..." : "Buat akun"}</span><span aria-hidden="true" className="auth-submit-icon">↗</span></button>
+                <button className="auth-submit group" disabled={isSubmitting} type="submit"><span>{isSubmitting && <span className="loading-dot mr-2" aria-hidden="true" />}{isSubmitting ? "Sedang mendaftar..." : "Buat akun"}</span><span aria-hidden="true" className="auth-submit-icon">↗</span></button>
               </form>
             </div>
           </section>

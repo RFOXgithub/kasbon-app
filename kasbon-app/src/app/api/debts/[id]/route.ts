@@ -115,13 +115,22 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
   }
 
-  const { data, error } = await supabase
+  const settlementOnly =
+    input.settled === true &&
+    updates.settled_at !== undefined &&
+    Object.keys(updates).length === 1;
+
+  let updateQuery = supabase
     .from("debts")
     .update(updates)
     .eq("id", idValidation.data)
-    .eq("user_id", userId)
-    .select(debtColumns)
-    .maybeSingle();
+    .eq("user_id", userId);
+
+  if (settlementOnly) {
+    updateQuery = updateQuery.is("settled_at", null);
+  }
+
+  const { data, error } = await updateQuery.select(debtColumns).maybeSingle();
 
   if (error) {
     console.error("PATCH /api/debts/[id] gagal:", error);
@@ -134,6 +143,26 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   if (!data) {
+    if (settlementOnly) {
+      const { data: latestDebt, error: latestError } = await supabase
+        .from("debts")
+        .select(debtColumns)
+        .eq("id", idValidation.data)
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (latestError) {
+        return errorResponse("Data kasbon tidak dapat diperiksa.", 500);
+      }
+
+      if (latestDebt?.settled_at) {
+        return Response.json(
+          { message: "Data kasbon sudah lunas.", data: latestDebt },
+          { status: 200 },
+        );
+      }
+    }
+
     return errorResponse("Data kasbon tidak ditemukan.", 404);
   }
 

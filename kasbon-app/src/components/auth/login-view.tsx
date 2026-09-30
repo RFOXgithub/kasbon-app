@@ -123,6 +123,7 @@ export function LoginView({
               className="mt-10 space-y-5"
               onSubmit={handleSubmit}
               noValidate
+              aria-busy={isSubmitting}
             >
               <div>
                 <label
@@ -200,6 +201,7 @@ export function LoginView({
                 type="submit"
               >
                 <span>
+                  {isSubmitting && <span className="loading-dot mr-2" aria-hidden="true" />}
                   {isSubmitting ? "Sedang masuk..." : "Masuk ke Kasbon"}
                 </span>
                 <span

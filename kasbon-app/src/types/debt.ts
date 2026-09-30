@@ -12,6 +12,11 @@ export type Debt = {
   updated_at: string;
 };
 
+export type DebtInput = Pick<
+  Debt,
+  "type" | "counterpart_name" | "amount" | "note" | "due_date"
+>;
+
 export type DebtListResponse = {
   data: Debt[];
 };

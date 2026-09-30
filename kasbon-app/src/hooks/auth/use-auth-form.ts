@@ -36,6 +36,7 @@ export function useAuthForm(mode: AuthMode) {
     }
 
     setIsSubmitting(true);
+    let isNavigating = false;
 
     try {
       const supabase = createClient();
@@ -53,6 +54,7 @@ export function useAuthForm(mode: AuthMode) {
 
         router.replace("/");
         router.refresh();
+        isNavigating = true;
         return;
       }
 
@@ -78,6 +80,7 @@ export function useAuthForm(mode: AuthMode) {
       if (data.session) {
         router.replace("/");
         router.refresh();
+        isNavigating = true;
         return;
       }
 
@@ -88,7 +91,7 @@ export function useAuthForm(mode: AuthMode) {
     } catch {
       setErrorMessage("Terjadi kesalahan. Silakan coba lagi.");
     } finally {
-      setIsSubmitting(false);
+      if (!isNavigating) setIsSubmitting(false);
     }
   }
 

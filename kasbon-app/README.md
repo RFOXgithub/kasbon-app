@@ -1,36 +1,29 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kasbon
 
-## Getting Started
+Aplikasi pribadi untuk mencatat utang dan piutang, memantau saldo belum lunas, serta menandai pembayaran. Dibangun dengan Next.js 16 App Router, TypeScript, Tailwind CSS v4, Supabase Auth/PostgreSQL, dan Lucide React.
 
-First, run the development server:
+## Demo
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+[Buka Kasbon di Vercel](https://konten-com-assignment-rival-septian.vercel.app/). Akun demo dibuat lewat halaman signup.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Menjalankan secara lokal
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Jalankan `npm install` dari folder `kasbon-app`.
+2. Salin `.env.example` ke `.env` dan isi `NEXT_PUBLIC_SUPABASE_URL` serta `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` dari proyek Supabase Anda. Jangan commit `.env` atau token sesi.
+3. Di Supabase Auth, atur Site URL dan redirect URL untuk `http://localhost:3000` serta domain Vercel di atas.
+4. Terapkan migration di `supabase/migrations/` dengan Supabase CLI: `npx supabase login`, `npx supabase link --project-ref <project-ref>`, lalu `npx supabase db push`. Migration membuat tabel, constraint, trigger, indeks, dan RLS.
+5. Jalankan `npm run dev`, lalu buka `http://localhost:3000`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Untuk pengecekan sebelum deploy, jalankan `npm run lint` dan `npm run build`. Di Vercel, isi dua environment variable Supabase yang sama pada pengaturan proyek dan deploy ulang.
 
-## Learn More
+## Fitur
 
-To learn more about Next.js, take a look at the following resources:
+- Signup, login, logout, dan pembatasan halaman/API untuk pengguna yang terautentikasi.
+- Catat, edit, lunasi, dan hapus utang/piutang. Jumlah disimpan sebagai Rupiah utuh dan divalidasi di client serta API.
+- Ringkasan transaksi belum lunas, Net, dan chart perbandingan.
+- Filter status/tipe, cari nama, urutkan tanggal/jumlah, dan ringkasan beberapa catatan dari orang yang sama.
+- Loading, error, dan empty state. API berada di `/api/debts` dan `/api/debts/[id]`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Pendekatan
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+API selalu mengambil `user_id` dari claims terverifikasi, bukan dari input pengguna. Query tetap membatasi `user_id`, sementara Row Level Security di PostgreSQL menjadi lapisan pembatas akses jika tabel dipanggil langsung lewat Supabase REST. `settled_at = null` berarti belum lunas; PATCH pelunasan memperbarui row yang sama, lalu UI menggunakan respons API agar ringkasan dan daftar langsung sinkron. Zod dipakai sebagai dependensi tambahan untuk validasi dan pesan error yang konsisten antara form dan API.

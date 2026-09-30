@@ -4,6 +4,8 @@ import { formatRupiah } from "@/lib/currency";
 import { calculateDebtSummary } from "@/lib/debt-summary";
 import type { Debt } from "@/types/debt";
 
+import { DebtComparisonChart } from "./debt-comparison-chart";
+
 type SummarySectionProps = {
   debts: Debt[];
   isLoading: boolean;
@@ -33,13 +35,26 @@ export function SummarySection({ debts, isLoading, hasError }: SummarySectionPro
                 <Icon aria-hidden="true" size={21} strokeWidth={1.5} />
               </div>
               <p className="mt-5 text-sm text-muted">{label}</p>
-              <p className={`mt-auto pt-2 text-3xl font-medium tracking-[-0.07em] sm:text-4xl ${label === "Net" && value < 0 ? "text-error-ink" : "text-ink"}`}>
-                {unavailable ? "—" : formatRupiah(value)}
-              </p>
+              {isLoading ? (
+                <span className="loading-skeleton mt-auto block h-10 w-2/3 rounded-xl" aria-hidden="true" />
+              ) : (
+                <p className={`mt-auto pt-2 text-3xl font-medium tracking-[-0.07em] sm:text-4xl ${label === "Net" ? (value > 0 ? "text-accent" : value < 0 ? "text-error-ink" : "text-ink") : "text-ink"}`}>
+                  {hasError ? "—" : formatRupiah(value)}
+                </p>
+              )}
             </div>
           </article>
         ))}
       </div>
+      {isLoading ? (
+        <div className="surface-shell mt-4" role="status" aria-label="Memuat perbandingan utang dan piutang">
+          <div className="surface-core space-y-5 p-6" aria-hidden="true">
+            <div className="loading-skeleton h-5 w-52 rounded-lg" />
+            <div className="loading-skeleton h-3 w-full rounded-full" />
+            <div className="loading-skeleton h-3 w-3/4 rounded-full" />
+          </div>
+        </div>
+      ) : !unavailable ? <DebtComparisonChart owedToMe={summary.owedToMe} iOwe={summary.iOwe} /> : null}
     </section>
   );
 }

@@ -1,27 +1,34 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { Debt, DebtListResponse, DebtMutationResponse } from "@/types/debt";
+import type { Debt, DebtInput, DebtListResponse, DebtMutationResponse } from "@/types/debt";
 
-async function readError(response: Response, fallback: string): Promise<string> {
+async function responseError(response: Response, fallback: string): Promise<Error> {
   const body: unknown = await response.json().catch(() => null);
-
-  if (body && typeof body === "object" && "error" in body) {
-    const message = body.error;
-    if (typeof message === "string") return message;
+  if (body && typeof body === "object" && "error" in body && typeof body.error === "string") {
+    return new Error(body.error);
   }
+  return new Error(fallback);
+}
 
-  return fallback;
+async function readDebt(response: Response, expectedId?: string): Promise<Debt> {
+  if (!response.ok) throw await responseError(response, "Catatan gagal disimpan.");
+  const body: DebtMutationResponse = await response.json();
+  if (!body.data?.id || (expectedId && body.data.id !== expectedId)) {
+    throw new Error("Respons catatan tidak valid. Muat ulang halaman.");
+  }
+  return body.data;
 }
 
 export function useDebts() {
   const [debts, setDebts] = useState<Debt[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [settleError, setSettleError] = useState<string | null>(null);
-  const [settlingId, setSettlingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const mutationInFlight = useRef(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -29,22 +36,14 @@ export function useDebts() {
     async function loadDebts() {
       setIsLoading(true);
       setLoadError(null);
-
       try {
         const response = await fetch("/api/debts", {
           credentials: "same-origin",
           signal: controller.signal,
         });
-
-        if (!response.ok) {
-          throw new Error(await readError(response, "Catatan gagal dimuat."));
-        }
-
+        if (!response.ok) throw await responseError(response, "Catatan gagal dimuat.");
         const result: DebtListResponse = await response.json();
-        if (!Array.isArray(result.data)) {
-          throw new Error("Data catatan tidak valid.");
-        }
-
+        if (!Array.isArray(result.data)) throw new Error("Data catatan tidak valid.");
         if (!controller.signal.aborted) setDebts(result.data);
       } catch (error) {
         if (!controller.signal.aborted) {
@@ -60,13 +59,45 @@ export function useDebts() {
   }, [reloadKey]);
 
   const retry = useCallback(() => setReloadKey((key) => key + 1), []);
+  const clearActionError = useCallback(() => setActionError(null), []);
 
-  async function settleDebt(debt: Debt) {
-    if (debt.settled_at !== null || settlingId !== null) return;
+  function beginMutation(action: string) {
+    if (mutationInFlight.current) return false;
+    mutationInFlight.current = true;
+    setPendingAction(action);
+    setActionError(null);
+    return true;
+  }
 
-    setSettlingId(debt.id);
-    setSettleError(null);
+  function endMutation() {
+    mutationInFlight.current = false;
+    setPendingAction(null);
+  }
 
+  async function saveDebt(input: DebtInput, existing?: Debt): Promise<boolean> {
+    if (!beginMutation(existing ? `edit:${existing.id}` : "create")) return false;
+    try {
+      const response = await fetch(existing ? `/api/debts/${encodeURIComponent(existing.id)}` : "/api/debts", {
+        method: existing ? "PATCH" : "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+      });
+      const saved = await readDebt(response, existing?.id);
+      setDebts((current) => existing
+        ? current.map((debt) => debt.id === saved.id ? saved : debt)
+        : [saved, ...current]);
+      return true;
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Catatan gagal disimpan.");
+      return false;
+    } finally {
+      endMutation();
+    }
+  }
+
+  async function settleDebt(debt: Debt): Promise<void> {
+    if (debt.settled_at !== null || !beginMutation(`settle:${debt.id}`)) return;
     try {
       const response = await fetch(`/api/debts/${encodeURIComponent(debt.id)}`, {
         method: "PATCH",
@@ -74,27 +105,36 @@ export function useDebts() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ settled: true }),
       });
-
-      if (!response.ok) {
-        throw new Error(await readError(response, "Catatan gagal ditandai lunas."));
+      const saved = await readDebt(response, debt.id);
+      if (typeof saved.settled_at !== "string") {
+        throw new Error("Respons pelunasan tidak valid. Muat ulang halaman.");
       }
-
-      const result: DebtMutationResponse = await response.json();
-      if (result.data?.id !== debt.id || result.data.settled_at === null) {
-        throw new Error("Respons pelunasan tidak valid. Muat ulang catatan.");
-      }
-
-      setDebts((current) =>
-        current.map((item) => (item.id === debt.id ? result.data : item)),
-      );
+      setDebts((current) => current.map((item) => item.id === saved.id ? saved : item));
     } catch (error) {
-      setSettleError(
-        error instanceof Error ? error.message : "Catatan gagal ditandai lunas.",
-      );
+      setActionError(error instanceof Error ? error.message : "Catatan gagal ditandai lunas.");
     } finally {
-      setSettlingId(null);
+      endMutation();
     }
   }
 
-  return { debts, isLoading, loadError, settleError, settlingId, retry, settleDebt };
+  async function deleteDebt(debt: Debt): Promise<void> {
+    if (!beginMutation(`delete:${debt.id}`)) return;
+    try {
+      const response = await fetch(`/api/debts/${encodeURIComponent(debt.id)}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      if (!response.ok) throw await responseError(response, "Catatan gagal dihapus.");
+      setDebts((current) => current.filter((item) => item.id !== debt.id));
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Catatan gagal dihapus.");
+    } finally {
+      endMutation();
+    }
+  }
+
+  return {
+    debts, isLoading, loadError, actionError, pendingAction,
+    retry, clearActionError, saveDebt, settleDebt, deleteDebt,
+  };
 }
