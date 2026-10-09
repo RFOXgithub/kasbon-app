@@ -46,3 +46,23 @@ next-env.d.ts
 # supabase local temporary files
 /supabase/.branches
 /supabase/.temp
+# task brief (kept local)
+/hiring-task-kasbon.md
+
+# AI agent / skill files and tooling
+/.claude/
+/.agents/
+/.cursor/
+/.codex/
+/.gemini/
+/.windsurf/
+/skills/
+/skills-lock.json
+/CLAUDE.md
+/AGENTS.md
+/GEMINI.md
+
+# editor / misc
+/.vscode/
+/.idea/
+*.log

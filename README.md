@@ -4,7 +4,7 @@ Aplikasi pribadi untuk mencatat utang dan piutang, memantau saldo belum lunas, s
 
 ## Setup
 
-1. Jalankan `npm install` dari folder `kasbon-app`.
+1. Jalankan `npm install` dari root repository.
 2. Salin `.env.example` ke `.env` dan isi `NEXT_PUBLIC_SUPABASE_URL` serta `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` dari proyek Supabase Anda. Jangan commit `.env` atau token sesi.
 3. Di Supabase Auth, atur Site URL dan redirect URL untuk `http://localhost:3000` serta domain Vercel pada bagian Demo.
 4. Terapkan migration di `supabase/migrations/` dengan Supabase CLI: `npx supabase login`, `npx supabase link --project-ref <project-ref>`, lalu `npx supabase db push`. Migration membuat tabel, constraint, trigger, indeks, grant, dan RLS.
